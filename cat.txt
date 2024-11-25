@@ -1,0 +1,151 @@
+<?php
+// Configuración de conexión a la base de datos
+$host = '127.0.0.1';
+$dbname = 'u118484904_api_v2';
+$username = 'u118484904_apiv2';
+$password = 'Chitul100';
+
+try {
+    // Conexión a la base de datos
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    // Consultar los datos de la tabla "productos"
+    $stmt = $pdo->query("SELECT id, store, item, precio, descuento, f_actual, foto, barras FROM productos");
+    $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    die("Error al conectar con la base de datos: " . $e->getMessage());
+}
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productos - Galería</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+        }
+        .container {
+            padding: 20px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            padding: 10px;
+            text-align: center;
+        }
+        .card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .card img:hover {
+            transform: scale(1.05);
+        }
+        .card h3, .card p {
+            margin: 10px 0;
+            font-size: 14px;
+            color: #333;
+        }
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+        }
+        .modal img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Listado de Productos</h1>
+        <?php if (!empty($productos)): ?>
+            <div class="grid">
+                <?php foreach ($productos as $producto): ?>
+                    <div class="card">
+                        <h3><?= htmlspecialchars($producto['item']) ?></h3>
+                        <p>Precio: $<?= htmlspecialchars($producto['precio']) ?></p>
+                        <p>Descuento: <?= htmlspecialchars($producto['descuento']) ?>%</p>
+                        <?php if (!empty($producto['foto'])): ?>
+                            <img src="<?= htmlspecialchars($producto['foto']) ?>" alt="Foto del Producto" data-full="<?= htmlspecialchars($producto['foto']) ?>">
+                        <?php endif; ?>
+                        <?php if (!empty($producto['barras'])): ?>
+                            <img src="<?= htmlspecialchars($producto['barras']) ?>" alt="Código de Barras" data-full="<?= htmlspecialchars($producto['barras']) ?>">
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <p>No se encontraron productos en la base de datos.</p>
+        <?php endif; ?>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="imageModal">
+        <span class="modal-close" id="modalClose">&times;</span>
+        <div class="modal-content">
+            <img id="modalImage" src="" alt="Imagen Ampliada">
+        </div>
+    </div>
+
+    <script>
+        // Abrir modal al hacer clic en una imagen
+        document.querySelectorAll('.card img').forEach(img => {
+            img.addEventListener('click', event => {
+                const modal = document.getElementById('imageModal');
+                const modalImage = document.getElementById('modalImage');
+                modalImage.src = event.target.dataset.full;
+                modal.style.display = 'flex';
+            });
+        });
+
+        // Cerrar modal
+        document.getElementById('modalClose').addEventListener('click', () => {
+            document.getElementById('imageModal').style.display = 'none';
+        });
+
+        // Cerrar modal al hacer clic fuera de la imagen
+        document.getElementById('imageModal').addEventListener('click', (event) => {
+            if (event.target === event.currentTarget) {
+                event.currentTarget.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
